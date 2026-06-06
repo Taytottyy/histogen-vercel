@@ -1,32 +1,57 @@
 # Deploy without Vercel (free)
 
-The bundle is ~241 MB with PHOENIX CSVs — too heavy for some free static hosts and near Vercel’s hobby limit. **Render free tier** is the easiest fit: one Python web service serves the UI, API, and `/data` files.
+The bundle is ~241 MB with PHOENIX CSVs — too heavy for some free static hosts and near Vercel’s hobby limit. **Render free tier** is the easiest fit: one **Python web service** serves the UI, API, and `/data` files.
 
-## Recommended: Render (free)
+## ⚠️ “Publish directory build does not exist!”
 
-1. Create account at [render.com](https://render.com) (GitHub login is fine).
-2. **New → Blueprint**
-3. Connect repo: **Taytottyy/histogen-vercel**
-4. Render reads `render.yaml` and creates the **histogen** web service (free plan).
-5. Click **Deploy** — first build takes a few minutes (large repo).
-6. Open the URL Render gives you (e.g. `https://histogen.onrender.com`).
+You created a **Static Site** by mistake. HistoGen is **not** a static export — it needs a **Web Service** (Python + FastAPI).
 
-**Free tier behavior:** the app sleeps after ~15 minutes idle; first load after sleep takes ~30–60 s. Fine for demos and sharing a link.
+**Fix:**
 
-Optional env in Render dashboard:
+1. In [Render Dashboard](https://dashboard.render.com), **delete** the failed Static Site.
+2. Do **not** use “Static Site” or set Publish Directory to `build` / `public`.
+3. Use one of the options below (**Blueprint** or **Web Service** only).
 
-| Variable | Purpose |
-|----------|---------|
-| `BIOHUB_API_KEY` | Live protein structures (optional; demo cache works without it) |
+---
 
-## Manual Render setup (no Blueprint)
+## Recommended: Blueprint → Web Service (free)
 
-- **New → Web Service** → connect **Taytottyy/histogen-vercel**
-- Runtime: **Python 3**
-- Build: `pip install -r requirements.txt`
-- Start: `uvicorn app:app --app-dir api --host 0.0.0.0 --port $PORT`
-- Env: `SERVE_STATIC=1`, `USE_PROTEIN_CACHE=1`
-- Plan: **Free**
+1. [render.com](https://render.com) → sign in with GitHub (**Taytottyy**).
+2. **New +** → **Blueprint** (not Static Site).
+3. Connect **`Taytottyy/histogen-vercel`**.
+4. Render reads `render.yaml` and creates a **Web Service** named `histogen` (Free plan).
+5. **Apply** → wait for build (several minutes — large repo).
+6. Open the `.onrender.com` URL.
+
+---
+
+## Manual: Web Service (if Blueprint fails)
+
+1. **New +** → **Web Service** (not Static Site).
+2. Connect **`Taytottyy/histogen-vercel`**, branch `main`.
+3. Settings:
+
+| Field | Value |
+|-------|--------|
+| **Language** | Python 3 |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `uvicorn app:app --app-dir api --host 0.0.0.0 --port $PORT` |
+| **Plan** | Free |
+
+4. **Environment** → add:
+
+| Key | Value |
+|-----|--------|
+| `SERVE_STATIC` | `1` |
+| `USE_PROTEIN_CACHE` | `1` |
+
+5. **Create Web Service** — leave **Publish Directory** blank (that field is Static Site only).
+
+Optional: `BIOHUB_API_KEY` for live protein fetches (demo cache works without it).
+
+**Free tier:** sleeps after ~15 min idle; first wake can take 30–60 s.
+
+---
 
 ## Run locally (same as Render)
 
