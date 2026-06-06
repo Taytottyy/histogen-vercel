@@ -13,8 +13,9 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from _paths import DATA_DIR, DEPLOY_ROOT
+from _paths import DATA_DIR, DEPLOY_ROOT, PUBLIC_DIR
 from cohort_figures import has_cohort_figures, list_figures, match_figure
 from patient_data import GENE_COLORS, get_patient, load_representative_patients, nearest_patients
 from phoenix_data import bundle_manifest, get_expression, has_phoenix_bundle
@@ -274,3 +275,11 @@ async def phoenix_heatmap(case_id: str):
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Heatmap bundle missing")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+# Render / local: one process serves static UI + /data assets (Vercel serves public/ separately).
+if os.getenv("RENDER") or os.getenv("SERVE_STATIC", "").strip().lower() in {"1", "true", "yes"}:
+    if DATA_DIR.is_dir():
+        app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
+    if PUBLIC_DIR.is_dir():
+        app.mount("/", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="ui")
